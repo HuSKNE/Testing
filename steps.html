@@ -220,7 +220,7 @@ body.loading { overflow: hidden; }
 }
 
 /* =====================================================
-   SOUND UNLOCK PROMPT (shown if music blocked by browser)
+   SOUND UNLOCK PROMPT
 ===================================================== */
 .sound-prompt {
     position: fixed;
@@ -1541,14 +1541,14 @@ body.loading { overflow: hidden; }
 
 <body class="loading">
 
-<!-- BACKGROUND MUSIC (looping, muted=off by default until user clicks) -->
+<!-- BACKGROUND MUSIC -->
 <audio id="bgMusic" loop preload="auto" playsinline>
     <source src="./assets/music.mp3" type="audio/mpeg">
     <source src="./assets/music.ogg" type="audio/ogg">
     Your browser does not support audio.
 </audio>
 
-<!-- SOUND UNLOCK PROMPT (shown if browser blocks autoplay) -->
+<!-- SOUND UNLOCK PROMPT -->
 <div class="sound-prompt" id="soundPrompt" aria-hidden="true">
     <div class="sound-prompt-card">
         <div class="sound-prompt-icon" aria-hidden="true">🔊</div>
@@ -1755,7 +1755,6 @@ const BGMusic = (function () {
                 showMuteBtn();
                 hidePrompt();
             }).catch(() => {
-                // Autoplay blocked — show prompt
                 showPrompt();
             });
         }
@@ -1769,7 +1768,6 @@ const BGMusic = (function () {
         if (soundPrompt) soundPrompt.classList.remove('show');
     }
 
-    // Unlock audio on first user gesture
     function unlockAudio() {
         if (isUnlocked) return;
         audio.muted = false;
@@ -1779,17 +1777,14 @@ const BGMusic = (function () {
         document.removeEventListener('keydown', unlockAudio);
     }
 
-    // Try to play on load (may be blocked by browser)
     setTimeout(() => {
         tryPlay();
     }, 400);
 
-    // Setup unlock listeners (in case autoplay blocked)
     document.addEventListener('touchstart', unlockAudio, { passive: true, once: true });
     document.addEventListener('click', unlockAudio, { once: true });
     document.addEventListener('keydown', unlockAudio, { once: true });
 
-    // Enable button in prompt
     if (enableBtn) {
         enableBtn.addEventListener('click', () => {
             audio.muted = false;
@@ -1809,7 +1804,6 @@ const BGMusic = (function () {
         });
     }
 
-    // Mute toggle
     if (muteToggle) {
         muteToggle.addEventListener('click', () => {
             if (isMuted) {
@@ -1865,81 +1859,6 @@ const BGMusic = (function () {
             try { audio.pause(); } catch (e) {}
         }
     };
-})();
-
-/* =====================================================
-   CLICK SOUND
-===================================================== */
-const ClickSound = (function () {
-    let ctx = null;
-    let enabled = true;
-
-    function init() {
-        if (ctx) return;
-        try {
-            const AC = window.AudioContext || window.webkitAudioContext;
-            if (AC) ctx = new AC();
-        } catch (e) {}
-    }
-
-    function play() {
-        if (!enabled) return;
-        init();
-        if (!ctx) return;
-        if (ctx.state === 'suspended') ctx.resume();
-
-        const now = ctx.currentTime;
-
-        const osc1 = ctx.createOscillator();
-        const gain1 = ctx.createGain();
-        osc1.type = 'square';
-        osc1.frequency.setValueAtTime(2000, now);
-        osc1.frequency.exponentialRampToValueAtTime(1400, now + 0.04);
-        gain1.gain.setValueAtTime(0.08, now);
-        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        osc1.connect(gain1);
-        gain1.connect(ctx.destination);
-        osc1.start(now);
-        osc1.stop(now + 0.05);
-
-        const osc2 = ctx.createOscillator();
-        const gain2 = ctx.createGain();
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(800, now);
-        osc2.frequency.exponentialRampToValueAtTime(400, now + 0.06);
-        gain2.gain.setValueAtTime(0.1, now);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-        osc2.connect(gain2);
-        gain2.connect(ctx.destination);
-        osc2.start(now);
-        osc2.stop(now + 0.07);
-
-        const osc3 = ctx.createOscillator();
-        const gain3 = ctx.createGain();
-        osc3.type = 'triangle';
-        osc3.frequency.setValueAtTime(200, now);
-        osc3.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-        gain3.gain.setValueAtTime(0.06, now);
-        gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
-        osc3.connect(gain3);
-        gain3.connect(ctx.destination);
-        osc3.start(now);
-        osc3.stop(now + 0.09);
-    }
-
-    function armAudio() {
-        init();
-        if (ctx && ctx.state === 'suspended') ctx.resume();
-        document.removeEventListener('touchstart', armAudio);
-        document.removeEventListener('mousedown', armAudio);
-        document.removeEventListener('keydown', armAudio);
-    }
-
-    document.addEventListener('touchstart', armAudio, { passive: true, once: true });
-    document.addEventListener('mousedown', armAudio, { once: true });
-    document.addEventListener('keydown', armAudio, { once: true });
-
-    return { play };
 })();
 
 /* =====================================================
@@ -2090,14 +2009,12 @@ function showToast(message) {
 })();
 
 /* =====================================================
-   RIPPLE + CLICK SOUND
+   RIPPLE EFFECT
 ===================================================== */
 (function () {
     const buttons = document.querySelectorAll('.gold-cta, .channel-btn');
     buttons.forEach((el) => {
         el.addEventListener('click', function (e) {
-            ClickSound.play();
-
             const rect = this.getBoundingClientRect();
             const size = Math.max(rect.width, rect.height);
             const x = e.clientX - rect.left - size / 2;
@@ -2185,12 +2102,10 @@ function launchConfetti() {
             if (lineFill) lineFill.style.width = '64%';
         }, 400);
 
-        // Fade out music before redirect
         setTimeout(() => {
             BGMusic.fadeOut(600);
         }, 200);
 
-        // Redirect after animations
         setTimeout(() => {
             BGMusic.pauseForRedirect();
             window.location.href = 'https://vplinks.in/K3oQtR';
@@ -2207,7 +2122,6 @@ document.addEventListener('keydown', (e) => {
         && document.activeElement.tagName !== 'BUTTON'
         && document.activeElement.tagName !== 'INPUT') {
         e.preventDefault();
-        ClickSound.play();
         const btn = document.getElementById('ctaBtn');
         if (btn) btn.click();
     }
