@@ -1969,7 +1969,8 @@ h2{
 <script>
 
 /* ============================================================
-   AI VOICE GUIDE (ADDED ONLY THIS PART, BOY VOICE)
+   AI VOICE GUIDE
+   (Only addition — Boy Voice for Bypass)
 ============================================================ */
 
 const VoiceGuide = (function () {
@@ -1987,14 +1988,13 @@ const VoiceGuide = (function () {
             try {
                 const utter = new SpeechSynthesisUtterance(text);
                 utter.lang = 'en-US';
-                utter.rate = 0.95;
-                utter.pitch = 1.05;
+                utter.rate = 0.92;
                 utter.volume = 0.9;
 
                 const voices = window.speechSynthesis.getVoices();
                 let preferred;
 
-                // Boy voice for bypass
+                // 🎤 Boy Voice for Bypass
                 if(id === "bypass") {
                     preferred = voices.find(v => v.lang.startsWith('en') && (
                         v.name.includes('Google UK English Male') || 
@@ -2002,14 +2002,15 @@ const VoiceGuide = (function () {
                         v.name.includes('Alex') ||
                         v.name.includes('Male')
                     ));
-                    utter.pitch = 0.9; // deeper voice
+                    utter.pitch = 0.9; // Deeper tone
                 } else {
-                    preferred = voices.find(v => v.lang.startsWith('en') && (
+                    preferred = voices.find(v => v.lang && v.lang.startsWith('en') && (
                         v.name.indexOf('Samantha') > -1 ||
                         v.name.indexOf('Google US English') > -1 ||
                         v.name.indexOf('Zira') > -1 ||
                         v.name.indexOf('Female') > -1
                     ));
+                    utter.pitch = 1.05;
                 }
 
                 if (preferred) utter.voice = preferred;
@@ -2169,7 +2170,7 @@ async function checkSecurity(){
         document.getElementById('mainContainer').style.display="none";
         document.getElementById('bypassContainer').style.display="block";
 
-        // 🎤 AI Voice — Bypass detected (BOY VOICE)
+        // 🎤 AI Voice — Bypass detected
         setTimeout(() => {
             VoiceGuide.speak(
                 "Access denied. Direct access to the key generation system is restricted. Please return to the steps page and complete verification to continue.",
